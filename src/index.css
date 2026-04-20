@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 18% 5%;
+    --foreground: 213 32% 97%;
+    --card: 220 16% 7%;
+    --card-foreground: 213 32% 97%;
+    --popover: 220 16% 7%;
+    --popover-foreground: 213 32% 97%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 220 18% 5%;
+    --secondary: 220 14% 10%;
+    --secondary-foreground: 213 32% 97%;
+    --muted: 220 14% 10%;
+    --muted-foreground: 215 14% 55%;
+    --accent: 220 14% 10%;
+    --accent-foreground: 213 32% 97%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 213 32% 97%;
+    --border: 220 13% 14%;
+    --input: 220 13% 14%;
+    --ring: 160 84% 39%;
+    --radius: 0.75rem;
+    --chart-1: 160 84% 39%;
+    --chart-2: 173 80% 40%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --sidebar-background: 220 18% 5%;
+    --sidebar-foreground: 213 32% 97%;
+    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary-foreground: 220 18% 5%;
+    --sidebar-accent: 220 14% 10%;
+    --sidebar-accent-foreground: 213 32% 97%;
+    --sidebar-border: 220 13% 14%;
+    --sidebar-ring: 160 84% 39%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground; }
+}
+
+/* ── CRITICAL: Full viewport lock ── */
+html { height: 100%; overflow: hidden; }
+body { height: 100%; overflow: hidden; margin: 0; }
+#root { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ── SCROLLBARS ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(52, 211, 153, 0.4); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(52, 211, 153, 0.7); }
+* { scrollbar-width: thin; scrollbar-color: rgba(52, 211, 153, 0.4) transparent; }
+
+/* ── Typing animation ── */
+@keyframes typing-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+.animate-typing-dot { animation: typing-dot 1.2s ease infinite; }
+
+/* ── Glow ── */
+.shadow-glow { box-shadow: 0 0 12px rgba(16, 185, 129, 0.3); }
+.shadow-glow-lg { box-shadow: 0 0 24px rgba(16, 185, 129, 0.4); }

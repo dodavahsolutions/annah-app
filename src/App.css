@@ -1,0 +1,26 @@
+/* Smooth transitions */
+* { transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* Slider */
+[data-slot="slider-track"] { background: hsl(var(--secondary)) !important; height: 6px !important; }
+[data-slot="slider-range"] { background: linear-gradient(90deg, #10B981, #14B8A6) !important; }
+[data-slot="slider-thumb"] { background: white !important; border: 2px solid #10B981 !important; box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important; width: 18px !important; height: 18px !important; }
+[data-slot="slider-thumb"]:hover { transform: scale(1.1); }
+
+/* Switch */
+[data-slot="switch"] { background: hsl(var(--secondary)) !important; }
+[data-slot="switch"][data-state="checked"] { background: #10B981 !important; }
+
+/* Sheet */
+[data-slot="sheet-overlay"] { background: rgba(0,0,0,0.6) !important; backdrop-filter: blur(4px); }
+
+/* Inputs */
+input[type="number"] { font-variant-numeric: tabular-nums; }
+
+/* Text selection */
+::selection { background: rgba(16, 185, 129, 0.3); color: inherit; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
