@@ -9,6 +9,8 @@ import { SuggestionChip } from './SuggestionChip';
 import { LeadCaptureModal } from './LeadCaptureModal';
 import { Badge } from '@/components/ui/badge';
 import { sendToAnna, buildDocContext, extractCitations, cleanText } from '@/lib/anna';
+import { useAuth } from '@/context/AuthContext';
+import { createClient } from '@/lib/supabase/client';
 import type { Message } from '@/types';
 import type { UploadedDoc } from '@/lib/anna';
 
@@ -43,7 +45,29 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [pendingMsg, setPendingMsg] = useState<string | null>(null);
   const [history, setHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+
+  const ensureSession = useCallback(async (firstMessageContent: string): Promise<string | null> => {
+    if (!user) return null;
+    if (sessionId) return sessionId;
+    const supabase = createClient();
+    const title = firstMessageContent.slice(0, 80);
+    const { data, error } = await supabase
+      .from('sessions')
+      .insert({ user_id: user.id, title })
+      .select('id')
+      .single();
+    if (error || !data) return null;
+    setSessionId(data.id as string);
+    return data.id as string;
+  }, [user, sessionId]);
+
+  const persistMessage = useCallback(async (sid: string, role: 'user' | 'assistant', content: string) => {
+    const supabase = createClient();
+    await supabase.from('messages').insert({ session_id: sid, role, content });
+  }, []);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -96,7 +120,7 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
 
   const handleFiles = (files: FileList | null) => { if (files) Array.from(files).forEach(processFile); };
 
-  const callAnna = async (hist: { role: 'user' | 'assistant'; content: string }[]) => {
+  const callAnna = async (hist: { role: 'user' | 'assistant'; content: string }[], sid: string | null) => {
     setIsTyping(true);
     try {
       const raw = await sendToAnna(hist, buildDocContext(docs));
@@ -105,6 +129,7 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
       const aiMsg: Message = { id: Date.now().toString(), role: 'assistant', content: cleaned, timestamp: new Date(), citations: citations.length ? citations : undefined };
       setMessages(prev => [...prev, aiMsg]);
       setHistory(prev => [...prev, { role: 'assistant', content: raw }]);
+      if (sid) await persistMessage(sid, 'assistant', cleaned);
     } catch {
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Sorry, I had trouble connecting. Please try again.', timestamp: new Date() }]);
     } finally { setIsTyping(false); }
@@ -117,7 +142,9 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
     const newHist = [...history, { role: 'user' as const, content }];
     setHistory(newHist);
     if (newCount === 3 && !leadCaptured) { setPendingMsg(content); setShowLeadModal(true); return; }
-    await callAnna(newHist);
+    const sid = await ensureSession(content);
+    if (sid) await persistMessage(sid, 'user', content);
+    await callAnna(newHist, sid);
   };
 
   const handleLeadComplete = async (name?: string) => {
@@ -128,7 +155,12 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
       hist = [...history, { role: 'user' as const, content: `[System: User is ${name}. Greet them warmly by first name.]` }];
       setHistory(hist);
     }
-    if (pendingMsg) { setPendingMsg(null); await callAnna(hist); }
+    if (pendingMsg) {
+      const sid = await ensureSession(pendingMsg);
+      if (sid) await persistMessage(sid, 'user', pendingMsg);
+      setPendingMsg(null);
+      await callAnna(hist, sid);
+    }
   };
 
   const readyDocs = docs.filter(d => d.status === 'ready');

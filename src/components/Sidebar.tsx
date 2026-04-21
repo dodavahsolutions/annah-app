@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PanelLeft, ChevronRight, Home, Building2, FileText, Landmark, Coins, ClipboardCheck, Scale, MapPin } from 'lucide-react';
+import { PanelLeft, ChevronRight, Home, Building2, FileText, Landmark, Coins, ClipboardCheck, Scale, MapPin, LogIn, LogOut } from 'lucide-react';
 import { Logo } from './Logo';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useAuth } from '@/context/AuthContext';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   home: Home, building: Building2, file: FileText, landmark: Landmark,
@@ -47,6 +49,17 @@ interface SidebarProps { className?: string; onNavClick?: (prompt: string) => vo
 export function Sidebar({ className, onNavClick }: SidebarProps) {
   const [collapsed, setCollapsed] = useLocalStorage('sidebar-collapsed', false);
   const [activeItem, setActiveItem] = useState<string | null>(null);
+  const { user, signOut } = useAuth();
+  const router = useRouter();
+
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Guest';
+  const initials = displayName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+  const subtitle = user ? user.email ?? 'Signed in' : 'First-time buyer';
+
+  const handleAuth = async () => {
+    if (user) { await signOut(); router.push('/login'); }
+    else router.push('/login');
+  };
 
   return (
     <motion.aside
@@ -93,22 +106,32 @@ export function Sidebar({ className, onNavClick }: SidebarProps) {
       </div>
 
       {/* Footer */}
-      <div className={cn("p-4 border-t border-border/50 flex-shrink-0", collapsed && "flex justify-center")}>
+      <div className={cn("p-4 border-t border-border/50 flex-shrink-0 space-y-2", collapsed && "flex flex-col items-center space-y-2")}>
         {!collapsed ? (
           <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-secondary/50">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
-              <span className="text-xs font-semibold text-background" id="userInitials">?</span>
+              <span className="text-xs font-semibold text-background">{initials}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate" id="userName">Guest</p>
-              <p className="text-xs text-muted-foreground truncate" id="userRole">First-time buyer</p>
+              <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+              <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
             </div>
           </div>
         ) : (
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-            <span className="text-xs font-semibold text-background">?</span>
+            <span className="text-xs font-semibold text-background">{initials}</span>
           </div>
         )}
+        <Button
+          variant="ghost"
+          size={collapsed ? 'icon' : 'sm'}
+          className={cn("text-muted-foreground hover:text-foreground text-xs", !collapsed && "w-full justify-start gap-2 px-3")}
+          onClick={handleAuth}
+          title={user ? 'Sign out' : 'Sign in'}
+        >
+          {user ? <LogOut className="w-3.5 h-3.5" /> : <LogIn className="w-3.5 h-3.5" />}
+          {!collapsed && (user ? 'Sign out' : 'Sign in')}
+        </Button>
       </div>
     </motion.aside>
   );
