@@ -1,3 +1,5 @@
+'use client';
+
 import { motion } from 'framer-motion';
 import { Calculator, Percent, TrendingUp, PieChart, ArrowUpCircle, RefreshCw, Key, Info } from 'lucide-react';
 import { CalculatorCard } from './CalculatorCard';

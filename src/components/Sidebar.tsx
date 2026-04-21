@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PanelLeft, ChevronRight, Home, Building2, FileText, Landmark, Coins, ClipboardCheck, Scale, MapPin } from 'lucide-react';
