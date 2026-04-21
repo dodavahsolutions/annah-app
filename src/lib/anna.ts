@@ -57,8 +57,8 @@ Tone: Warm, friendly, clear and professional. Use plain English. Bold key figure
 Always clarify when regulated financial advice is needed, but still provide helpful general information.
 When someone mentions a specific Scottish town or city, tailor your answer to that area where possible.`;
 
-// API configuration — proxy URL (anna-proxy.php must be in same folder on Hostinger)
-export const PROXY_URL = 'anna-proxy.php';
+// API configuration — Vercel serverless function
+export const PROXY_URL = '/api/anna';
 
 // Google Sheets webhook — paste your Apps Script URL here
 export const SHEETS_WEBHOOK = '';
