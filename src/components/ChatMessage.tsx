@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, Fragment, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -10,17 +11,36 @@ interface ChatMessageProps {
   index: number;
 }
 
-function formatContent(content: string) {
-  return content.split('\n').map((line, i) => {
-    if (line.startsWith('• ') || line.startsWith('- ')) {
-      return <li key={i} className="ml-4 list-disc">{line.substring(2)}</li>;
+// Safe **bold** renderer — splits the line and returns React elements instead of
+// injecting raw HTML. Eliminates the dangerouslySetInnerHTML XSS sink.
+function renderInlineBold(line: string): ReactNode {
+  const parts = line.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
     }
-    const boldLine = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    return <p key={i} className={i > 0 ? 'mt-2.5' : ''} dangerouslySetInnerHTML={{ __html: boldLine || '&nbsp;' }} />;
+    return <Fragment key={i}>{part}</Fragment>;
   });
 }
 
-export function ChatMessage({ message, index }: ChatMessageProps) {
+function formatContent(content: string) {
+  return content.split('\n').map((line, i) => {
+    if (line.startsWith('• ') || line.startsWith('- ')) {
+      return (
+        <li key={i} className="ml-4 list-disc">
+          {renderInlineBold(line.substring(2))}
+        </li>
+      );
+    }
+    return (
+      <p key={i} className={i > 0 ? 'mt-2.5' : ''}>
+        {line ? renderInlineBold(line) : '\u00A0'}
+      </p>
+    );
+  });
+}
+
+function ChatMessageComponent({ message, index }: ChatMessageProps) {
   const isUser = message.role === 'user';
 
   return (
@@ -67,3 +87,7 @@ export function ChatMessage({ message, index }: ChatMessageProps) {
     </motion.div>
   );
 }
+
+export const ChatMessage = memo(ChatMessageComponent, (prev, next) =>
+  prev.message === next.message && prev.index === next.index
+);

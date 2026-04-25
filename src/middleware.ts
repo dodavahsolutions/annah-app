@@ -1,12 +1,23 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+// NOTE — Routing model is intentionally DEFAULT-ALLOW: every page is reachable
+// anonymously (chat works as guest). This middleware only refreshes the
+// Supabase session and redirects already-authed users away from /login and
+// /signup. If you ever add a route that should be authenticated-only
+// (/dashboard, /admin, /settings, …) you MUST add an explicit check here —
+// otherwise it ships silently public.
 export async function middleware(request: NextRequest) {
+  // Skip Supabase session refresh if env vars aren't configured yet
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
@@ -26,7 +37,16 @@ export async function middleware(request: NextRequest) {
   );
 
   // Refresh session — do not remove, required for Supabase Auth to work
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Redirect authenticated users away from auth pages to keep the UX clean.
+  const { pathname } = request.nextUrl;
+  if (user && (pathname === '/login' || pathname === '/signup')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/';
+    url.search = '';
+    return NextResponse.redirect(url);
+  }
 
   return supabaseResponse;
 }

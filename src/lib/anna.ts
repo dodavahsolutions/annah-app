@@ -60,9 +60,6 @@ When someone mentions a specific Scottish town or city, tailor your answer to th
 // API configuration — Vercel serverless function
 export const PROXY_URL = '/api/anna';
 
-// Google Sheets webhook — paste your Apps Script URL here
-export const SHEETS_WEBHOOK = '';
-
 export interface AnnaMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -78,44 +75,110 @@ export interface UploadedDoc {
   progress: number;
 }
 
-export interface LeadData {
-  timestamp: string;
-  name: string;
-  email: string;
-  phone: string;
-  area: string;
-  ftb: string;
-  source: string;
-}
-
 export async function sendToAnna(
   messages: AnnaMessage[],
-  docContext: string
+  docContext: string,
+  firstName?: string
 ): Promise<string> {
-  const system = ANNA_SYSTEM_PROMPT + docContext;
+  // System prompt is hard-coded server-side; client only supplies messages + doc context.
   const response = await fetch(PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
       max_tokens: 1000,
-      system,
+      docContext,
+      firstName,
       messages,
     }),
   });
   const data = await response.json();
-  if (data.error) throw new Error(data.error.message || 'API error');
+  if (data.error) throw new Error(data.error.message || data.error || 'API error');
   return data.content?.map((b: { text?: string }) => b.text || '').join('') || 'Sorry, something went wrong.';
 }
 
-export async function saveLead(lead: LeadData): Promise<void> {
-  console.log('ANNA LEAD CAPTURED:', lead);
-  if (SHEETS_WEBHOOK) {
-    await fetch(SHEETS_WEBHOOK, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(lead),
-    });
+/**
+ * Stream Anna's response as text deltas. Yields each incremental chunk as it
+ * arrives from the server. The server proxies Anthropic's SSE directly, so we
+ * parse `content_block_delta` events here and emit just the text fragments.
+ *
+ * Usage:
+ *   let full = '';
+ *   for await (const chunk of streamFromAnna(messages, docContext)) {
+ *     full += chunk;
+ *     setLiveText(full);
+ *   }
+ */
+export async function* streamFromAnna(
+  messages: AnnaMessage[],
+  docContext: string,
+  firstName?: string,
+  signal?: AbortSignal
+): AsyncGenerator<string, void, unknown> {
+  const response = await fetch(`${PROXY_URL}?stream=1`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ max_tokens: 1000, docContext, firstName, messages }),
+    signal,
+  });
+
+  if (!response.ok || !response.body) {
+    let errMsg = `Request failed (${response.status})`;
+    try {
+      const j = await response.json();
+      errMsg = j.error?.message || j.error || errMsg;
+    } catch {
+      // ignore
+    }
+    throw new Error(errMsg);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      // SSE frames are separated by blank lines.
+      let idx: number;
+      while ((idx = buffer.indexOf('\n\n')) !== -1) {
+        const frame = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 2);
+
+        // Each frame has `event: ...` and `data: ...` lines.
+        const dataLine = frame
+          .split('\n')
+          .find((l) => l.startsWith('data:'));
+        if (!dataLine) continue;
+        const raw = dataLine.slice(5).trim();
+        if (!raw || raw === '[DONE]') continue;
+
+        try {
+          const evt = JSON.parse(raw);
+          if (
+            evt.type === 'content_block_delta' &&
+            evt.delta?.type === 'text_delta' &&
+            typeof evt.delta.text === 'string'
+          ) {
+            yield evt.delta.text;
+          } else if (evt.type === 'message_stop') {
+            return;
+          } else if (evt.type === 'error') {
+            throw new Error(evt.error?.message || 'Stream error');
+          }
+        } catch (err) {
+          // Skip malformed frames but surface real errors
+          if (err instanceof Error && err.message.startsWith('Stream error')) {
+            throw err;
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
   }
 }
 

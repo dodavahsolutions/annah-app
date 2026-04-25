@@ -1,18 +1,19 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Sparkles, FileText, X, Upload } from 'lucide-react';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { SuggestionChip } from './SuggestionChip';
-import { LeadCaptureModal } from './LeadCaptureModal';
 import { Badge } from '@/components/ui/badge';
-import { sendToAnna, buildDocContext, extractCitations, cleanText } from '@/lib/anna';
+import { streamFromAnna, buildDocContext, extractCitations, cleanText } from '@/lib/anna';
 import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import type { Message } from '@/types';
 import type { UploadedDoc } from '@/lib/anna';
+
+const MAX_USER_MESSAGE_CHARS = 2000;
 
 const suggestions = [
   "How much deposit do I need in Scotland?",
@@ -40,46 +41,204 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
   const [messages, setMessages] = useState<Message[]>([initialMessage]);
   const [isTyping, setIsTyping] = useState(false);
   const [docs, setDocs] = useState<UploadedDoc[]>([]);
-  const [msgCount, setMsgCount] = useState(0);
-  const [leadCaptured, setLeadCaptured] = useState(false);
-  const [showLeadModal, setShowLeadModal] = useState(false);
-  const [pendingMsg, setPendingMsg] = useState<string | null>(null);
   const [history, setHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  // In-flight guard: prevents two parallel ensureSession calls from inserting
+  // duplicate session rows when the user sends messages rapidly.
+  const sessionPromiseRef = useRef<Promise<string | null> | null>(null);
   const { user } = useAuth();
 
-  const ensureSession = useCallback(async (firstMessageContent: string): Promise<string | null> => {
-    if (!user) return null;
-    if (sessionId) return sessionId;
-    const supabase = createClient();
-    const title = firstMessageContent.slice(0, 80);
-    const { data, error } = await supabase
-      .from('sessions')
-      .insert({ user_id: user.id, title })
-      .select('id')
-      .single();
-    if (error || !data) return null;
-    setSessionId(data.id as string);
-    return data.id as string;
-  }, [user, sessionId]);
+  // Derive Anna's greeting hint from the signed-up user's metadata. The
+  // sanitisation that used to live in the lead-capture flow now lives
+  // server-side in /api/anna/route.ts.
+  const firstName = useMemo<string | undefined>(() => {
+    const full = (user?.user_metadata?.full_name as string | undefined) ?? '';
+    const trimmed = full.trim().split(/\s+/)[0];
+    return trimmed ? trimmed.slice(0, 60) : undefined;
+  }, [user]);
 
-  const persistMessage = useCallback(async (sid: string, role: 'user' | 'assistant', content: string) => {
-    const supabase = createClient();
-    await supabase.from('messages').insert({ session_id: sid, role, content });
-  }, []);
+  const ensureSession = useCallback(
+    (firstMessageContent: string): Promise<string | null> => {
+      if (!user) return Promise.resolve(null);
+      if (sessionId) return Promise.resolve(sessionId);
+      if (sessionPromiseRef.current) return sessionPromiseRef.current;
 
-  // Auto-scroll to bottom
+      const p = (async () => {
+        try {
+          const supabase = createClient();
+          const title = firstMessageContent.slice(0, 80);
+          const { data, error } = await supabase
+            .from('sessions')
+            .insert({ user_id: user.id, title })
+            .select('id')
+            .single();
+          if (error || !data) {
+            // Persistence failure is non-fatal — chat still works in-memory.
+            return null;
+          }
+          const id = data.id as string;
+          setSessionId(id);
+          return id;
+        } finally {
+          sessionPromiseRef.current = null;
+        }
+      })();
+
+      sessionPromiseRef.current = p;
+      return p;
+    },
+    [user, sessionId]
+  );
+
+  const persistMessage = useCallback(
+    async (sid: string, role: 'user' | 'assistant', content: string) => {
+      try {
+        const supabase = createClient();
+        await supabase.from('messages').insert({ session_id: sid, role, content });
+        // Bump session.updated_at so the "most recent session" query on the
+        // next page load returns this conversation. Best-effort — failures
+        // are silently ignored to avoid leaking schema details.
+        await supabase
+          .from('sessions')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', sid);
+      } catch {
+        // ignore
+      }
+    },
+    []
+  );
+
+  // Auto-scroll to bottom — scrollIntoView on a sentinel is cheaper than
+  // forcing a layout read of scrollHeight every render.
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, isTyping]);
 
-  // Handle nav sidebar clicks
+  // Load the user's most recent chat session on mount so refresh doesn't wipe
+  // history. RLS on `sessions` and `messages` ensures we only ever see rows
+  // belonging to auth.uid(). If the user has no prior sessions, we fall back
+  // to the welcome message (initialMessage).
   useEffect(() => {
-    if (externalMessage) { handleSend(externalMessage); onExternalHandled?.(); }
-  }, [externalMessage]);
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { data: sess } = await supabase
+          .from('sessions')
+          .select('id')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (cancelled || !sess) return;
+
+        const { data: rows } = await supabase
+          .from('messages')
+          .select('id, role, content, created_at')
+          .eq('session_id', sess.id)
+          .order('created_at', { ascending: true });
+        if (cancelled || !rows || rows.length === 0) return;
+
+        const restored: Message[] = rows.map((r) => ({
+          id: String(r.id),
+          role: r.role as 'user' | 'assistant',
+          content: r.content as string,
+          timestamp: new Date(r.created_at as string),
+        }));
+        setSessionId(sess.id as string);
+        setMessages([initialMessage, ...restored]);
+        setHistory(
+          restored.map((m) => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          }))
+        );
+      } catch {
+        // ignore — fall back to the welcome message
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const callAnna = useCallback(
+    async (hist: { role: 'user' | 'assistant'; content: string }[], sid: string | null) => {
+      setIsTyping(true);
+      const assistantId = Date.now().toString();
+      // Seed an empty assistant message and append streamed tokens to it.
+      setMessages(prev => [
+        ...prev,
+        { id: assistantId, role: 'assistant', content: '', timestamp: new Date() },
+      ]);
+
+      let raw = '';
+      try {
+        for await (const delta of streamFromAnna(hist, buildDocContext(docs), firstName)) {
+          raw += delta;
+          const cleanedSoFar = cleanText(raw);
+          setMessages(prev =>
+            prev.map(m => (m.id === assistantId ? { ...m, content: cleanedSoFar } : m))
+          );
+          // Hide the typing indicator once the first token arrives.
+          setIsTyping(false);
+        }
+
+        const citations = extractCitations(raw);
+        const cleaned = cleanText(raw);
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === assistantId
+              ? { ...m, content: cleaned, citations: citations.length ? citations : undefined }
+              : m
+          )
+        );
+        setHistory(prev => [...prev, { role: 'assistant', content: raw }]);
+        if (sid && cleaned) await persistMessage(sid, 'assistant', cleaned);
+      } catch {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === assistantId
+              ? { ...m, content: 'Sorry, I had trouble connecting. Please try again.' }
+              : m
+          )
+        );
+      } finally {
+        setIsTyping(false);
+      }
+    },
+    [docs, persistMessage, firstName]
+  );
+
+  const handleSend = useCallback(
+    async (rawContent: string) => {
+      const content = rawContent.slice(0, MAX_USER_MESSAGE_CHARS).trim();
+      if (!content) return;
+
+      setMessages(prev => [
+        ...prev,
+        { id: Date.now().toString(), role: 'user', content, timestamp: new Date() },
+      ]);
+      const newHist = [...history, { role: 'user' as const, content }];
+      setHistory(newHist);
+      const sid = await ensureSession(content);
+      if (sid) await persistMessage(sid, 'user', content);
+      await callAnna(newHist, sid);
+    },
+    [history, ensureSession, persistMessage, callAnna]
+  );
+
+  // Handle nav sidebar clicks — now correctly depends on handleSend so the
+  // latest closure is used (no stale docs/history).
+  useEffect(() => {
+    if (externalMessage) {
+      handleSend(externalMessage);
+      onExternalHandled?.();
+    }
+  }, [externalMessage, handleSend, onExternalHandled]);
 
   // Export
   useEffect(() => {
@@ -91,6 +250,7 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
     a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain' }));
     a.download = `anna-chat-${Date.now()}.txt`;
     a.click();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exportTrigger]);
 
   const processFile = useCallback(async (file: File) => {
@@ -100,7 +260,9 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
     try {
       if (ext === 'pdf') {
         const pdfjsLib = await import('pdfjs-dist');
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        // Self-hosted same-origin worker — pinned to the version installed via
+        // package.json. Eliminates supply-chain risk from third-party CDN.
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
         const arr = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arr }).promise;
         let text = '';
@@ -115,53 +277,14 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
         const text = await file.text();
         setDocs(prev => prev.map(d => d.id === id ? { ...d, text: text.substring(0, 40000), status: 'ready', progress: 100 } : d));
       }
-    } catch { setDocs(prev => prev.map(d => d.id === id ? { ...d, status: 'error' } : d)); }
+    } catch {
+      // PDF parse failure surfaces via the per-doc 'error' badge — no console
+      // leak (a malicious PDF could otherwise probe parser internals).
+      setDocs(prev => prev.map(d => d.id === id ? { ...d, status: 'error' } : d));
+    }
   }, []);
 
   const handleFiles = (files: FileList | null) => { if (files) Array.from(files).forEach(processFile); };
-
-  const callAnna = async (hist: { role: 'user' | 'assistant'; content: string }[], sid: string | null) => {
-    setIsTyping(true);
-    try {
-      const raw = await sendToAnna(hist, buildDocContext(docs));
-      const citations = extractCitations(raw);
-      const cleaned = cleanText(raw);
-      const aiMsg: Message = { id: Date.now().toString(), role: 'assistant', content: cleaned, timestamp: new Date(), citations: citations.length ? citations : undefined };
-      setMessages(prev => [...prev, aiMsg]);
-      setHistory(prev => [...prev, { role: 'assistant', content: raw }]);
-      if (sid) await persistMessage(sid, 'assistant', cleaned);
-    } catch {
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Sorry, I had trouble connecting. Please try again.', timestamp: new Date() }]);
-    } finally { setIsTyping(false); }
-  };
-
-  const handleSend = async (content: string) => {
-    const newCount = msgCount + 1;
-    setMsgCount(newCount);
-    setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', content, timestamp: new Date() }]);
-    const newHist = [...history, { role: 'user' as const, content }];
-    setHistory(newHist);
-    if (newCount === 3 && !leadCaptured) { setPendingMsg(content); setShowLeadModal(true); return; }
-    const sid = await ensureSession(content);
-    if (sid) await persistMessage(sid, 'user', content);
-    await callAnna(newHist, sid);
-  };
-
-  const handleLeadComplete = async (name?: string) => {
-    setLeadCaptured(true);
-    setShowLeadModal(false);
-    let hist = history;
-    if (name) {
-      hist = [...history, { role: 'user' as const, content: `[System: User is ${name}. Greet them warmly by first name.]` }];
-      setHistory(hist);
-    }
-    if (pendingMsg) {
-      const sid = await ensureSession(pendingMsg);
-      if (sid) await persistMessage(sid, 'user', pendingMsg);
-      setPendingMsg(null);
-      await callAnna(hist, sid);
-    }
-  };
 
   const readyDocs = docs.filter(d => d.status === 'ready');
   const hasMessages = messages.length > 1;
@@ -195,7 +318,6 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
 
       {/* Messages — THIS is the scrollable area */}
       <div
-        ref={scrollRef}
         style={{ flex:1, minHeight:0, overflowY:'scroll', overflowX:'hidden', padding:'24px 16px' }}
       >
         <div className="max-w-3xl mx-auto space-y-6">
@@ -233,6 +355,8 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
               Anna is referencing {readyDocs.length} uploaded document{readyDocs.length > 1 ? 's' : ''}
             </div>
           )}
+
+          <div ref={bottomRef} aria-hidden="true" />
         </div>
       </div>
 
@@ -240,8 +364,6 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
       <div className="border-t border-border/50 flex-shrink-0">
         <ChatInput onSend={handleSend} disabled={isTyping} onFileUpload={handleFiles} docCount={readyDocs.length} />
       </div>
-
-      <LeadCaptureModal open={showLeadModal} onComplete={handleLeadComplete} />
     </div>
   );
 }

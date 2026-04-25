@@ -2,6 +2,19 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Rate limiting (`/api/anna`)
+
+The Anthropic chat proxy at `src/app/api/anna/route.ts` is rate-limited per user
+(authenticated via the Supabase session cookie) or per IP for anonymous callers.
+
+- Authenticated: **20 requests / minute / user**
+- Anonymous: **5 requests / minute / IP**
+
+Exceeded requests return HTTP `429` with a `Retry-After` header and
+`X-RateLimit-*` headers. To enable, set `UPSTASH_REDIS_REST_URL` and
+`UPSTASH_REDIS_REST_TOKEN` (see `.env.example`). If unset, rate limiting is
+skipped and a warning is logged in production.
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
