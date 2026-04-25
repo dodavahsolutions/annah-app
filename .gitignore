@@ -3,4 +3,12 @@ dist/
 .next/
 .env
 .env.local
+.env*.local
 *.log
+
+# Vercel
+.vercel/
+
+# TypeScript build cache
+*.tsbuildinfo
+tsconfig.tsbuildinfo
