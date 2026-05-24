@@ -8,13 +8,19 @@ type LimitResult = {
   reset: number;
 };
 
-let authedLimiter: Ratelimit | null = null;
-let anonLimiter: Ratelimit | null = null;
+let redis: Redis | null = null;
 let disabled = false;
 
-function getLimiters() {
+let annaAuthedLimiter: Ratelimit | null = null;
+let annaAnonLimiter: Ratelimit | null = null;
+let leadLimiter: Ratelimit | null = null;
+
+// Lazily resolve a single shared Redis client. Returns null (and disables all
+// rate limiting) when Upstash credentials are absent, so the app still works
+// in local/dev without Redis configured.
+function getRedis(): Redis | null {
   if (disabled) return null;
-  if (authedLimiter && anonLimiter) return { authedLimiter, anonLimiter };
+  if (redis) return redis;
 
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -28,34 +34,55 @@ function getLimiters() {
     return null;
   }
 
-  const redis = new Redis({ url, token });
-  authedLimiter = new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(20, '1 m'),
-    analytics: false,
-    prefix: 'rl:anna:user',
-  });
-  anonLimiter = new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(5, '1 m'),
-    analytics: false,
-    prefix: 'rl:anna:ip',
-  });
-  return { authedLimiter, anonLimiter };
+  redis = new Redis({ url, token });
+  return redis;
 }
 
 export async function checkAnnaRateLimit(params: {
   userId: string | null;
   ip: string;
 }): Promise<LimitResult | null> {
-  const limiters = getLimiters();
-  if (!limiters) return null;
+  const client = getRedis();
+  if (!client) return null;
+
+  if (!annaAuthedLimiter || !annaAnonLimiter) {
+    annaAuthedLimiter = new Ratelimit({
+      redis: client,
+      limiter: Ratelimit.slidingWindow(20, '1 m'),
+      analytics: false,
+      prefix: 'rl:anna:user',
+    });
+    annaAnonLimiter = new Ratelimit({
+      redis: client,
+      limiter: Ratelimit.slidingWindow(5, '1 m'),
+      analytics: false,
+      prefix: 'rl:anna:ip',
+    });
+  }
 
   const { userId, ip } = params;
   if (userId) {
-    return limiters.authedLimiter.limit(`u:${userId}`);
+    return annaAuthedLimiter.limit(`u:${userId}`);
   }
-  return limiters.anonLimiter.limit(`ip:${ip}`);
+  return annaAnonLimiter.limit(`ip:${ip}`);
+}
+
+// Lead submissions are far rarer than chat messages and unauthenticated by
+// design, so this is a tighter per-IP cap purely to blunt spam/abuse.
+export async function checkLeadRateLimit(ip: string): Promise<LimitResult | null> {
+  const client = getRedis();
+  if (!client) return null;
+
+  if (!leadLimiter) {
+    leadLimiter = new Ratelimit({
+      redis: client,
+      limiter: Ratelimit.slidingWindow(3, '1 m'),
+      analytics: false,
+      prefix: 'rl:lead:ip',
+    });
+  }
+
+  return leadLimiter.limit(`ip:${ip}`);
 }
 
 export function getClientIp(headers: Headers): string {

@@ -4,6 +4,7 @@ import { ANNA_SYSTEM_PROMPT } from '@/lib/anna';
 import { checkAnnaRateLimit, getClientIp } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithTimeout } from '@/lib/supabase/auth-timeout';
+import { buildCorsHeaders } from '@/lib/cors';
 
 const MAX_MESSAGE_CHARS = 4000;
 const MAX_MESSAGES = 40;
@@ -33,20 +34,6 @@ function sanitizeFirstName(raw: string): string {
     .replace(/[\[\]<>{}`]/g, '')
     .trim()
     .slice(0, 60);
-}
-
-function buildCorsHeaders(origin: string | null): Record<string, string> {
-  const allowed = process.env.NEXT_PUBLIC_SITE_URL || '';
-  // Same-origin requests from our own app have no Origin header, which is fine.
-  // Only echo the origin back if it matches our configured site URL.
-  const allowOrigin = origin && allowed && origin === allowed ? origin : '';
-  const headers: Record<string, string> = {
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    Vary: 'Origin',
-  };
-  if (allowOrigin) headers['Access-Control-Allow-Origin'] = allowOrigin;
-  return headers;
 }
 
 export async function OPTIONS(req: NextRequest) {

@@ -6,6 +6,8 @@ import { Bot, Sparkles, FileText, X, Upload } from 'lucide-react';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { SuggestionChip } from './SuggestionChip';
+import { LeadCaptureDialog } from './lead/LeadCaptureDialog';
+import { useLeadTrigger } from '@/hooks/useLeadTrigger';
 import { Badge } from '@/components/ui/badge';
 import { streamFromAnna, buildDocContext, extractCitations, cleanText } from '@/lib/anna';
 import { useAuth } from '@/context/AuthContext';
@@ -290,6 +292,11 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
   const hasMessages = messages.length > 1;
   const fmtSize = (b: number) => b < 1048576 ? `${(b/1024).toFixed(1)}KB` : `${(b/1048576).toFixed(1)}MB`;
 
+  // Surface the broker lead-capture dialog once the user has sent enough
+  // messages to signal genuine intent (plan §2.4).
+  const userMessageCount = messages.filter(m => m.role === 'user').length;
+  const lead = useLeadTrigger({ userMessageCount });
+
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%', overflow:'hidden' }}>
 
@@ -364,6 +371,14 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
       <div className="border-t border-border/50 flex-shrink-0">
         <ChatInput onSend={handleSend} disabled={isTyping} onFileUpload={handleFiles} docCount={readyDocs.length} />
       </div>
+
+      <LeadCaptureDialog
+        open={lead.open}
+        onOpenChange={lead.onOpenChange}
+        engagementMessages={userMessageCount}
+        hasUploadedDoc={readyDocs.length > 0}
+        onSubmitted={lead.markSubmitted}
+      />
     </div>
   );
 }
