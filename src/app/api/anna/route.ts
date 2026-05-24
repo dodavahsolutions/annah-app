@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ANNA_SYSTEM_PROMPT } from '@/lib/anna';
 import { checkAnnaRateLimit, getClientIp } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
+import { getUserWithTimeout } from '@/lib/supabase/auth-timeout';
 
 const MAX_MESSAGE_CHARS = 4000;
 const MAX_MESSAGES = 40;
@@ -63,8 +64,8 @@ export async function POST(req: NextRequest) {
   let userId: string | null = null;
   try {
     const supabase = await createClient();
-    const { data } = await supabase.auth.getUser();
-    userId = data.user?.id ?? null;
+    const user = await getUserWithTimeout(supabase);
+    userId = user?.id ?? null;
   } catch {
     userId = null;
   }

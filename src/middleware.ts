@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { getUserWithTimeout } from '@/lib/supabase/auth-timeout';
 
 // NOTE — Routing model is intentionally DEFAULT-ALLOW: every page is reachable
 // anonymously (chat works as guest). This middleware only refreshes the
@@ -36,8 +37,10 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session — do not remove, required for Supabase Auth to work
-  const { data: { user } } = await supabase.auth.getUser();
+  // Refresh session — do not remove, required for Supabase Auth to work.
+  // Time-boxed: if Supabase stalls, fall back to anonymous so this middleware
+  // never times out and 504s the whole site.
+  const user = await getUserWithTimeout(supabase);
 
   // Redirect authenticated users away from auth pages to keep the UX clean.
   const { pathname } = request.nextUrl;
