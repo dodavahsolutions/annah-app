@@ -69,6 +69,7 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
       const p = (async () => {
         try {
           const supabase = createClient();
+          if (!supabase) return null;
           const title = firstMessageContent.slice(0, 80);
           const { data, error } = await supabase
             .from('sessions')
@@ -97,6 +98,7 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
     async (sid: string, role: 'user' | 'assistant', content: string) => {
       try {
         const supabase = createClient();
+        if (!supabase) return;
         await supabase.from('messages').insert({ session_id: sid, role, content });
         // Bump session.updated_at so the "most recent session" query on the
         // next page load returns this conversation. Best-effort — failures
@@ -128,6 +130,7 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
     (async () => {
       try {
         const supabase = createClient();
+        if (!supabase) return;
         const { data: sess } = await supabase
           .from('sessions')
           .select('id')

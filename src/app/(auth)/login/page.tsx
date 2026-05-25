@@ -22,6 +22,11 @@ export default function LoginPage() {
     setLoading(true);
 
     const supabase = createClient();
+    if (!supabase) {
+      setError('Sign-in is unavailable right now. You can continue as a guest.');
+      setLoading(false);
+      return;
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
