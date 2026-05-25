@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Calculator } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Sidebar } from '@/components/Sidebar';
@@ -17,6 +17,18 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [navPrompt, setNavPrompt] = useState<string | undefined>();
   const [exportTrigger, setExportTrigger] = useState(0);
+
+  // The chat app is a fixed full-viewport shell: lock document scroll so only
+  // the inner panes scroll. Marketing pages render without this class.
+  useEffect(() => {
+    const { documentElement, body } = document;
+    documentElement.classList.add('chat-locked');
+    body.classList.add('chat-locked');
+    return () => {
+      documentElement.classList.remove('chat-locked');
+      body.classList.remove('chat-locked');
+    };
+  }, []);
 
   const handleNavClick = useCallback((prompt: string) => {
     setNavPrompt(prompt);

@@ -47,9 +47,13 @@
   body { @apply bg-background text-foreground; }
 }
 
-/* ── CRITICAL: Full viewport lock ── */
-html { height: 100%; overflow: hidden; }
-body { height: 100%; overflow: hidden; margin: 0; }
+/* ── Viewport ──
+   The chat app at `/` locks the viewport so only its inner panes scroll; it
+   opts in via the `.chat-locked` class (added by the chat page on mount).
+   Marketing pages scroll the document normally. */
+html { height: 100%; }
+body { min-height: 100%; margin: 0; }
+html.chat-locked, body.chat-locked { height: 100%; overflow: hidden; }
 
 /* ── SCROLLBARS ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
