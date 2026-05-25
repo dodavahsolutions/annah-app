@@ -40,14 +40,14 @@ export function MarketingFooter() {
               Mortgage glossary
             </Link>
             <Link href="/" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-              Chat with Anna
+              Chat with Annah
             </Link>
           </div>
         </div>
 
         <div className="mt-10 border-t border-border/60 pt-6">
           <p className="text-xs leading-relaxed text-muted-foreground">
-            Anna provides general information and calculators only. It is not regulated financial
+            Annah provides general information and calculators only. It is not regulated financial
             advice and does not recommend specific products or lenders. Always confirm figures with a
             qualified mortgage adviser before making decisions. LBTT is administered by Revenue
             Scotland.

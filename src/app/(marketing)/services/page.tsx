@@ -5,9 +5,9 @@ import { Breadcrumbs, PageHero, Section, CtaBanner } from '@/components/marketin
 import { SERVICES } from '@/content/services';
 
 export const metadata: Metadata = pageMetadata({
-  title: 'What Anna Helps With',
+  title: 'What Annah Helps With',
   description:
-    'From Scotland mortgage guidance and instant calculators to LBTT estimates, document help and local area context — see everything Anna can do for Scottish home buyers.',
+    'From Scotland mortgage guidance and instant calculators to LBTT estimates, document help and local area context — see everything Annah can do for Scottish home buyers.',
   path: '/services',
 });
 
@@ -17,7 +17,7 @@ export default function ServicesPage() {
       <Breadcrumbs crumbs={[{ name: 'Services', path: '/services' }]} />
       <PageHero
         eyebrow="Services"
-        title="Everything Anna helps with"
+        title="Everything Annah helps with"
         subtitle="One place to understand the Scottish mortgage journey — guidance, numbers and local context, all free to use."
       />
       <Section tight>

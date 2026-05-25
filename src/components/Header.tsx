@@ -29,7 +29,7 @@ export function Header({ onMenuClick, onExport, className }: HeaderProps) {
           </Button>
         )}
         <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="text-foreground font-medium">Anna</span>
+          <span className="text-foreground font-medium">Annah</span>
           <span>/</span>
           <span>Scotland Mortgage Advisor</span>
         </div>

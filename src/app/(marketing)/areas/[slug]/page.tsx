@@ -50,7 +50,7 @@ export default async function AreaPage({ params }: AreaPageProps) {
       />
       <JsonLd
         data={localBusinessJsonLd({
-          name: `Anna — Mortgage guidance in ${area.name}`,
+          name: `Annah — Mortgage guidance in ${area.name}`,
           description: `${area.intro} ${area.marketNote}`,
           path,
           areaName: area.name,
@@ -114,7 +114,7 @@ export default async function AreaPage({ params }: AreaPageProps) {
       </Section>
       <CtaBanner
         title={`Have a question about buying in ${area.name}?`}
-        body="Ask Anna about local prices, LBTT and affordability for a specific Scottish property."
+        body="Ask Annah about local prices, LBTT and affordability for a specific Scottish property."
       />
     </>
   );

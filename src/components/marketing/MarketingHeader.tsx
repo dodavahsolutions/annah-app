@@ -14,7 +14,7 @@ export function MarketingHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/" aria-label="Anna home" className="shrink-0">
+        <Link href="/" aria-label="Annah home" className="shrink-0">
           <Logo />
         </Link>
 
@@ -34,7 +34,7 @@ export function MarketingHeader() {
           <Button asChild size="sm" className="hidden bg-emerald-500 text-background hover:bg-emerald-600 sm:inline-flex">
             <Link href="/">
               <MessageCircle className="mr-1.5 h-4 w-4" />
-              Ask Anna
+              Ask Annah
             </Link>
           </Button>
 
@@ -60,7 +60,7 @@ export function MarketingHeader() {
                 <Button asChild className="mt-3 bg-emerald-500 text-background hover:bg-emerald-600">
                   <Link href="/" onClick={() => setOpen(false)}>
                     <MessageCircle className="mr-1.5 h-4 w-4" />
-                    Ask Anna
+                    Ask Annah
                   </Link>
                 </Button>
               </div>

@@ -4,11 +4,11 @@
 import type { Metadata } from 'next';
 
 export const SITE = {
-  name: 'Anna',
-  legalName: 'Anna Mortgages',
+  name: 'Annah',
+  legalName: 'Annah Mortgages',
   tagline: 'Scotland Mortgage Advisor',
   description:
-    'Anna is an AI-powered mortgage guide for Scotland — instant calculators for LBTT, affordability and repayments, plus plain-English help with Scottish home-buying schemes.',
+    'Annah is an AI-powered mortgage guide for Scotland — instant calculators for LBTT, affordability and repayments, plus plain-English help with Scottish home-buying schemes.',
   // CORS already relies on NEXT_PUBLIC_SITE_URL; reuse it as the canonical origin.
   // Strip any trailing slash so absoluteUrl() never produces a double slash.
   url: (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, ''),

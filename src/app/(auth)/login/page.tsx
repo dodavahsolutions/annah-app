@@ -46,7 +46,7 @@ export default function LoginPage() {
           <Home className="w-5 h-5 text-background" />
         </div>
         <div>
-          <span className="text-xl font-bold text-foreground">Anna</span>
+          <span className="text-xl font-bold text-foreground">Annah</span>
           <p className="text-xs text-muted-foreground">Scotland Mortgage Advisor</p>
         </div>
       </div>

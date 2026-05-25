@@ -52,7 +52,7 @@ export const FAQ_CATEGORIES: readonly FaqCategory[] = [
       {
         question: 'What is the Additional Dwelling Supplement (ADS)?',
         answer:
-          'ADS is an extra LBTT charge that applies when you buy an additional residential property, such as a second home or a buy-to-let, while keeping another. It is charged on top of standard LBTT on the full purchase price. Use Anna\'s LBTT calculator to estimate both figures.',
+          'ADS is an extra LBTT charge that applies when you buy an additional residential property, such as a second home or a buy-to-let, while keeping another. It is charged on top of standard LBTT on the full purchase price. Use Annah\'s LBTT calculator to estimate both figures.',
       },
     ],
   },
@@ -63,7 +63,7 @@ export const FAQ_CATEGORIES: readonly FaqCategory[] = [
       {
         question: 'How much can I borrow?',
         answer:
-          'Lenders typically lend around four to four-and-a-half times annual income, adjusted for outgoings, credit commitments and the deposit. Affordability also depends on the interest rate and term. Anna\'s affordability calculator gives an indicative range so you can sense-check budgets early.',
+          'Lenders typically lend around four to four-and-a-half times annual income, adjusted for outgoings, credit commitments and the deposit. Affordability also depends on the interest rate and term. Annah\'s affordability calculator gives an indicative range so you can sense-check budgets early.',
       },
       {
         question: 'How big a deposit do I need?',
@@ -84,17 +84,17 @@ export const FAQ_CATEGORIES: readonly FaqCategory[] = [
   },
   {
     id: 'about-anna',
-    title: 'About Anna',
+    title: 'About Annah',
     items: [
       {
-        question: 'Is Anna regulated financial advice?',
+        question: 'Is Annah regulated financial advice?',
         answer:
-          'No. Anna provides general information and indicative calculations to help you understand the Scottish mortgage process. It does not recommend specific products or lenders and is not a substitute for advice from a qualified, regulated mortgage adviser.',
+          'No. Annah provides general information and indicative calculations to help you understand the Scottish mortgage process. It does not recommend specific products or lenders and is not a substitute for advice from a qualified, regulated mortgage adviser.',
       },
       {
-        question: 'Does Anna cost anything?',
+        question: 'Does Annah cost anything?',
         answer:
-          'Anna\'s chat assistant and calculators are free to use. You can ask questions and run estimates without creating an account.',
+          'Annah\'s chat assistant and calculators are free to use. You can ask questions and run estimates without creating an account.',
       },
     ],
   },

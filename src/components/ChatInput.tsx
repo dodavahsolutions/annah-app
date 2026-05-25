@@ -14,7 +14,7 @@ interface ChatInputProps {
   docCount?: number;
 }
 
-export function ChatInput({ onSend, disabled = false, placeholder = "Ask Anna about Scottish mortgages, schemes, or new builds...", onFileUpload, docCount = 0 }: ChatInputProps) {
+export function ChatInput({ onSend, disabled = false, placeholder = "Ask Annah about Scottish mortgages, schemes, or new builds...", onFileUpload, docCount = 0 }: ChatInputProps) {
   const [input, setInput] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -80,7 +80,7 @@ export function ChatInput({ onSend, disabled = false, placeholder = "Ask Anna ab
         </motion.div>
       </div>
       <p className="mt-2 text-center text-xs text-muted-foreground">
-        Anna provides guidance only · Not regulated financial advice · Always consult a qualified mortgage advisor
+        Annah provides guidance only · Not regulated financial advice · Always consult a qualified mortgage advisor
       </p>
     </motion.div>
   );

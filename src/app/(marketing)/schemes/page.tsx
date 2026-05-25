@@ -115,7 +115,7 @@ export default function SchemesPage() {
       </Section>
       <CtaBanner
         title="Wondering if a scheme fits your situation?"
-        body="Ask Anna about Scottish home-buying schemes and how they interact with deposit, LBTT and affordability."
+        body="Ask Annah about Scottish home-buying schemes and how they interact with deposit, LBTT and affordability."
       />
     </>
   );

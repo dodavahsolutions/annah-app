@@ -1,4 +1,4 @@
-// Service offerings shown on /services. Maps to Anna's core capabilities.
+// Service offerings shown on /services. Maps to Annah's core capabilities.
 
 import {
   Calculator,
@@ -44,7 +44,7 @@ export const SERVICES: readonly ServiceItem[] = [
     icon: FileText,
     title: 'Document help',
     description:
-      'Upload a Home Report or mortgage document and ask Anna to summarise the key figures and flag what to look at next.',
+      'Upload a Home Report or mortgage document and ask Annah to summarise the key figures and flag what to look at next.',
     href: '/',
   },
   {

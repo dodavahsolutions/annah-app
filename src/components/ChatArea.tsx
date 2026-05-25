@@ -29,7 +29,7 @@ const suggestions = [
 const initialMessage: Message = {
   id: 'welcome',
   role: 'assistant',
-  content: "Hi, I'm Anna – your Scotland-wide mortgage advisor for first-time buyers.\n\nI cover the whole of Scotland – from Edinburgh and Glasgow to Aberdeen, Dundee, Inverness and everywhere in between. I can help with Scottish government schemes, LBTT, new build developments, the buying process, and more.\n\nI have interactive calculators on the right panel, and you can upload mortgage guides or scheme PDFs using the paperclip button below.",
+  content: "Hi, I'm Annah – your Scotland-wide mortgage advisor for first-time buyers.\n\nI cover the whole of Scotland – from Edinburgh and Glasgow to Aberdeen, Dundee, Inverness and everywhere in between. I can help with Scottish government schemes, LBTT, new build developments, the buying process, and more.\n\nI have interactive calculators on the right panel, and you can upload mortgage guides or scheme PDFs using the paperclip button below.",
   timestamp: new Date(),
 };
 
@@ -362,7 +362,7 @@ export function ChatArea({ externalMessage, onExternalHandled, exportTrigger }: 
           {readyDocs.length > 0 && (
             <div className="flex items-center gap-2 text-xs text-emerald-400/60 justify-center">
               <FileText className="w-3 h-3" />
-              Anna is referencing {readyDocs.length} uploaded document{readyDocs.length > 1 ? 's' : ''}
+              Annah is referencing {readyDocs.length} uploaded document{readyDocs.length > 1 ? 's' : ''}
             </div>
           )}
 

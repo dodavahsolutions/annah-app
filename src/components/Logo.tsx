@@ -26,7 +26,7 @@ export function Logo({ collapsed = false }: LogoProps) {
           transition={{ duration: 0.3, delay: 0.1 }}
         >
           <span className="text-base font-semibold text-foreground tracking-tight">
-            Anna
+            Annah
           </span>
           <span className="text-[11px] text-muted-foreground tracking-wide uppercase">
             Scotland Mortgages

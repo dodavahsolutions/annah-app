@@ -27,7 +27,7 @@ export default function FaqPage() {
       </Section>
       <CtaBanner
         title="Still have a question?"
-        body="Ask Anna directly — it answers Scotland-specific mortgage questions in plain English."
+        body="Ask Annah directly — it answers Scotland-specific mortgage questions in plain English."
       />
     </>
   );

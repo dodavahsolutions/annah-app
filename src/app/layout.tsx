@@ -3,7 +3,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Anna – Scotland Mortgage Advisor',
+  title: 'Annah – Scotland Mortgage Advisor',
   description: 'AI-powered mortgage advisor specialising in Scotland',
 }
 

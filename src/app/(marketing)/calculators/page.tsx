@@ -29,7 +29,7 @@ export default function CalculatorsPage() {
       </Section>
       <CtaBanner
         title="Not sure which number matters most?"
-        body="Ask Anna to walk you through repayments, deposit and LBTT for a specific property in Scotland."
+        body="Ask Annah to walk you through repayments, deposit and LBTT for a specific property in Scotland."
       />
     </>
   );

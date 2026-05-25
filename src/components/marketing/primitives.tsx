@@ -102,7 +102,7 @@ interface CtaBannerProps {
 
 export function CtaBanner({
   title = 'Have a question about your mortgage?',
-  body = 'Anna answers Scotland-specific mortgage questions instantly — free, no signup needed.',
+  body = 'Annah answers Scotland-specific mortgage questions instantly — free, no signup needed.',
 }: CtaBannerProps) {
   return (
     <Section>
@@ -110,7 +110,7 @@ export function CtaBanner({
         <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{title}</h2>
         <p className="mt-3 max-w-xl text-muted-foreground">{body}</p>
         <Button asChild size="lg" className="mt-6 bg-emerald-500 text-background hover:bg-emerald-600">
-          <Link href="/">Ask Anna now</Link>
+          <Link href="/">Ask Annah now</Link>
         </Button>
       </div>
     </Section>
