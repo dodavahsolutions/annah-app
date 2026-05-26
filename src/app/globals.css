@@ -99,3 +99,118 @@ input[type="number"] { font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   CHAT UI DESIGN SYSTEM (ported from the annah-ui project)
+   Namespaced under --chat-* so it never collides with the shadcn/marketing
+   tokens above. Light values live in :root; dark values under .dark (set by
+   next-themes). Marketing pages don't reference these vars, so they're inert
+   outside the chat surface.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --chat-bg-base: #f6f8fa;
+  --chat-bg-surface: #ffffff;
+  --chat-bg-elevated: #f0f2f5;
+  --chat-bg-hover: #e8ebf0;
+  --chat-border: #d0d7de;
+  --chat-border-subtle: #e8ebf0;
+  --chat-text-primary: #1c2128;
+  --chat-text-secondary: #57606a;
+  --chat-text-hint: #9198a1;
+  --chat-accent: #0f6e56;
+  --chat-accent-hover: #0a5240;
+  --chat-accent-dim: #e1f5ee;
+  --chat-user-bubble-bg: #ffffff;
+  --chat-user-bubble-border: #d0d7de;
+  --chat-user-bubble-text: #1c2128;
+}
+
+.dark {
+  --chat-bg-base: #0d1117;
+  --chat-bg-surface: #161b22;
+  --chat-bg-elevated: #1c2128;
+  --chat-bg-hover: #21262d;
+  --chat-border: #30363d;
+  --chat-border-subtle: #21262d;
+  --chat-text-primary: #f0ede8;
+  --chat-text-secondary: #8b949e;
+  --chat-text-hint: #484f58;
+  --chat-accent: #1d9e75;
+  --chat-accent-hover: #178360;
+  --chat-accent-dim: #0d3d2e;
+  --chat-user-bubble-bg: #1c2128;
+  --chat-user-bubble-border: #30363d;
+  --chat-user-bubble-text: #f0ede8;
+}
+
+.font-display { font-family: var(--font-display), Georgia, serif; }
+
+.avatar-circle { background: var(--chat-accent-dim); color: var(--chat-accent); }
+.dark .avatar-circle { background: var(--chat-accent); color: #ffffff; }
+
+.user-bubble {
+  background: var(--chat-user-bubble-bg);
+  border: 1px solid var(--chat-user-bubble-border);
+  border-radius: 18px 18px 4px 18px;
+  padding: 10px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--chat-user-bubble-text);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--chat-text-secondary);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: chat-blink 1s step-end infinite;
+}
+@keyframes chat-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+.suggestion-pill {
+  background: var(--chat-bg-surface);
+  border: 1px solid var(--chat-border);
+  border-radius: 9999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--chat-text-secondary);
+  white-space: nowrap;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.suggestion-pill:hover { background: var(--chat-bg-elevated); color: var(--chat-text-primary); }
+.dark .suggestion-pill { background: var(--chat-bg-elevated); }
+.dark .suggestion-pill:hover { background: var(--chat-bg-hover); }
+
+.source-pill {
+  background: var(--chat-bg-elevated);
+  border: 1px solid var(--chat-border);
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--chat-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.input-wrap:focus-within {
+  border-color: var(--chat-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--chat-accent) 15%, transparent);
+}
+
+/* Markdown prose — token-driven so dark mode works automatically. */
+.chat-prose p { color: var(--chat-text-primary); margin-bottom: 0.75rem; line-height: 1.7; }
+.chat-prose p:last-child { margin-bottom: 0; }
+.chat-prose strong { color: var(--chat-text-primary); font-weight: 500; }
+.chat-prose ul, .chat-prose ol { margin-left: 1rem; margin-bottom: 0.75rem; list-style-position: outside; }
+.chat-prose ul { list-style-type: disc; }
+.chat-prose ol { list-style-type: decimal; }
+.chat-prose li { margin-bottom: 0.25rem; color: var(--chat-text-primary); }
+.chat-prose code { background: var(--chat-bg-elevated); border: 1px solid var(--chat-border); border-radius: 4px; padding: 1px 5px; font-size: 0.875em; color: var(--chat-text-primary); }
+.chat-prose pre { background: var(--chat-bg-elevated); border: 1px solid var(--chat-border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin-bottom: 0.75rem; }
+.chat-prose pre code { background: none; border: none; padding: 0; font-size: 0.8125em; }
+.chat-prose a { color: var(--chat-accent); text-decoration: underline; }

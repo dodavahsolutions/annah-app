@@ -10,6 +10,7 @@ module.exports = {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['var(--font-display)', 'Georgia', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -79,6 +80,21 @@ module.exports = {
           800: '#115e59',
           900: '#134e4a',
         },
+        // Chat UI design tokens (ported from annah-ui). Backed by --chat-* CSS
+        // vars (see globals.css). Kept separate from the shadcn palette so the
+        // marketing site and chat surface never share a token.
+        'bg-base': 'var(--chat-bg-base)',
+        'bg-surface': 'var(--chat-bg-surface)',
+        'bg-elevated': 'var(--chat-bg-elevated)',
+        'bg-hover': 'var(--chat-bg-hover)',
+        'border-chat': 'var(--chat-border)',
+        'border-subtle': 'var(--chat-border-subtle)',
+        'text-primary': 'var(--chat-text-primary)',
+        'text-secondary': 'var(--chat-text-secondary)',
+        'text-hint': 'var(--chat-text-hint)',
+        brand: 'var(--chat-accent)',
+        'brand-hover': 'var(--chat-accent-hover)',
+        'brand-dim': 'var(--chat-accent-dim)',
       },
       borderRadius: {
         xl: "calc(var(--radius) + 4px)",
