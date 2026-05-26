@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useStore } from "@/store/useStore"
+import { useChatHistory } from "@/hooks/useChatHistory"
 import { Sidebar } from "./Sidebar"
 import { TopNav } from "./TopNav"
 import { ChatArea } from "./ChatArea"
@@ -13,6 +14,9 @@ import { SettingsPanel } from "./SettingsPanel"
 export function ChatShell() {
   const sidebarOpen = useStore((s) => s.sidebarOpen)
   const setSidebarOpen = useStore((s) => s.setSidebarOpen)
+
+  // Load signed-in users' saved Supabase chat history into the sidebar.
+  useChatHistory()
 
   useEffect(() => {
     if (!sidebarOpen) return

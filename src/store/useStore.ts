@@ -30,6 +30,8 @@ interface StoreState {
   setSettingsOpen: (val: boolean) => void
   clearConversations: () => void
   getActiveConversation: () => Conversation | undefined
+  setRemoteId: (conversationId: string, remoteId: string) => void
+  hydrateConversations: (conversations: Conversation[]) => void
 }
 
 function deriveTitle(content: string): string {
@@ -143,6 +145,21 @@ export const useStore = create<StoreState>()(
         const { conversations, activeConversationId } = get()
         return conversations.find((c) => c.id === activeConversationId)
       },
+
+      setRemoteId: (conversationId, remoteId) =>
+        set((state) => ({
+          conversations: state.conversations.map((c) =>
+            c.id === conversationId ? { ...c, remoteId } : c
+          ),
+        })),
+
+      // Replace local conversations with the signed-in user's Supabase history
+      // and focus the most recent one. Only called when remote has data.
+      hydrateConversations: (conversations) =>
+        set(() => ({
+          conversations,
+          activeConversationId: conversations[0]?.id ?? null,
+        })),
     }),
     {
       name: "anna-ui-store",

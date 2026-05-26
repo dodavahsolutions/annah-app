@@ -22,4 +22,6 @@ export interface Conversation {
   messages: Message[]
   createdAt: number
   updatedAt: number
+  /** Supabase `sessions.id` once this conversation is persisted (signed-in only). */
+  remoteId?: string
 }
