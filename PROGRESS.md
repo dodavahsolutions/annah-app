@@ -4,7 +4,7 @@
 > sprints land. The full plan lives at
 > `~/.claude/plans/sprightly-yawning-sutton.md`.
 >
-> **Last updated:** 2026-05-25
+> **Last updated:** 2026-05-26
 
 ---
 
@@ -103,6 +103,37 @@ Found while verifying Sprint B locally and fixed end-to-end (pushed to `origin/m
   - `context/AuthContext.tsx` — guards `useEffect` + `signOut`; falls back to `{ user: null, loading: false }`.
   - `components/ChatArea.tsx`, `(auth)/login`, `(auth)/signup` — guard each `createClient()` call site (auth pages show a "continue as a guest" message).
 - **Verified:** `next build` green; with blank env the app renders guest-only (the "Guest / First-time buyer" card shows) instead of the "Missing environment variable" error overlay. Production unaffected (vars set in Vercel).
+
+---
+
+## ✅ Security hardening — Supabase linter warnings (migration `0003`)
+
+Triggered by the Supabase Performance/Security linter (6 warnings) against the
+live project. Migration `supabase/migrations/0003_security_hardening.sql` (idempotent).
+
+- **`leads_public_insert` dropped** — the `WITH CHECK (true)` INSERT policy for
+  anon/authenticated was unnecessary: leads are inserted only via the service-role
+  key in `/api/leads` (bypasses RLS), and the only `.from('leads')` call is that
+  admin route. Dropping it removes a public write path nothing used. RLS stays on
+  with no policy → anon/authenticated get zero access; service-role insert unaffected.
+  *(Supersedes the Sprint A2 note describing `leads_public_insert` as live.)*
+- **`handle_new_user()` EXECUTE revoked** from anon/authenticated/public — stays a
+  `SECURITY DEFINER` trigger function but is no longer callable via `/rest/v1/rpc/`.
+- **`rls_auto_enable()` EXECUTE revoked** (guarded `DO` block, no-op if absent).
+  Confirmed legitimate (2026-05-26): it's an **event-trigger function** that
+  auto-enables RLS on any new `public` table via `pg_event_trigger_ddl_commands()`.
+  **Keep it** — revoke only (it can't run via RPC anyway, the linter just flags the
+  EXECUTE grant). Do NOT drop.
+
+### Remaining manual actions
+- [x] Apply migration `0003` (run via dashboard SQL editor). *(2026-05-26)* — clears warnings 1–5.
+- [~] **Leaked password protection** (warning 6): **Pro-plan only** — cannot be enabled
+      on the free plan (dashboard returns "available on Pro Plans and up"). Accepted as a
+      known limitation (WARN, not CRITICAL). Free-tier mitigation: set min password length
+      + required character types under Authentication → Providers → Password. Optional
+      future work: implement the HaveIBeenPwned Pwned Passwords range API (free/keyless,
+      k-anonymity) in the signup path — slot into a sprint.
+- [x] Inspect `rls_auto_enable` — confirmed legitimate event-trigger function; keep + revoke (done in `0003`). *(2026-05-26)*
 
 ---
 
