@@ -1,12 +1,15 @@
 # Anna — Scotland Mortgage Advisor
 
-Anna is a Scotland-focused mortgage advisor web app: a Claude-powered chat assistant,
-7 Scotland-aware mortgage calculators (repayment, affordability, LBTT incl. ADS, LTV,
-overpayment, remortgage, buy-to-let), client-side PDF document upload, Supabase auth +
-chat-history persistence, lead capture, and a public SEO/marketing site.
+Anna is a Scotland-focused mortgage advisor web app: a Claude-powered **streaming chat
+assistant** (redesigned UI under `src/components/chat/`, zustand state, light/dark),
+Scotland-aware mortgage calculators (repayment, affordability, LBTT incl. ADS, LTV,
+overpayment, remortgage, buy-to-let), Supabase auth + chat-history persistence, and a
+public SEO/marketing site. Live at **[annahai.co.uk](https://annahai.co.uk)**.
 
-Built with **Next.js 15 (App Router)**, React 19, TypeScript, Tailwind + shadcn/ui, and
-Supabase.
+Built with **Next.js 15 (App Router)**, React 19, TypeScript, Tailwind + shadcn/ui (marketing)
+alongside a `--chat-*` token system + next-themes (chat), and Supabase.
+
+> A fresh lead-capture flow is planned; the `/api/leads` backend + lead scoring remain in place.
 
 > **Project status & roadmap:** see [`PROGRESS.md`](./PROGRESS.md). Architecture and
 > contributor guidance live in [`CLAUDE.md`](./CLAUDE.md).

@@ -5,14 +5,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What This Is
 
 **Anna** (project codename "ANNAH") is a Scotland-focused mortgage advisor web app. It
-combines a Claude-powered chat assistant with 7 Scotland-aware mortgage calculators,
-client-side PDF document upload, Supabase auth + chat-history persistence, lead capture
-(stored in Supabase + optional CRM webhook), and a public SEO/marketing site.
+combines a Claude-powered streaming chat assistant with Scotland-aware mortgage
+calculators, Supabase auth + chat-history persistence, and a public SEO/marketing site.
 
 It is a **Next.js 15 App Router** app (not Vite — earlier revisions were Vite; that is gone).
 
+The **chat UI at `/`** was redesigned and ported in from the (now-archived) `annah-ui`
+project: a zustand-driven, streaming, light/dark chat shell living under
+`src/components/chat/`. The legacy chat surface (Header/ChatArea/Sidebar/ToolsPanel) and the
+old lead-capture UI have been removed; a fresh lead-capture flow will be written later (the
+`/api/leads` backend + `scoreLead()` remain in place for it to build on).
+
 > **Roadmap & status:** see `PROGRESS.md` (the source-of-truth memory file). Sprints A and B
-> are done; C–E are ahead. Read it before starting roadmap work.
+> are done; the chat-UI port + custom-domain consolidation landed after; C–E are ahead.
+> Read it before starting roadmap work.
+
+**Canonical production URL:** `https://annahai.co.uk` (apex). `www.annahai.co.uk` and
+`annah-app.vercel.app` 308-redirect to it; the archived `annah-ui.vercel.app` also redirects in.
 
 ## Commands
 
@@ -39,7 +48,7 @@ See `.env.example` for the full list. For local dev, copy it to `.env.local`.
 | `ANTHROPIC_API_KEY` | `src/app/api/anna/route.ts` (server) | Yes (chat) |
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | browser + middleware Supabase clients | No* |
 | `SUPABASE_SERVICE_ROLE_KEY` | `src/lib/supabase/admin.ts` (leads insert, bypasses RLS) | Yes (lead capture) |
-| `NEXT_PUBLIC_SITE_URL` | CORS allow-list + canonical/sitemap origin (`src/lib/seo.ts`) | Recommended |
+| `NEXT_PUBLIC_SITE_URL` | CORS allow-list + canonical/sitemap origin (`src/lib/seo.ts`); prod = `https://annahai.co.uk` | Recommended |
 | `UPSTASH_REDIS_REST_URL` / `_TOKEN` | rate limiting (`src/lib/rate-limit.ts`) | Optional (off if unset) |
 | `LEADS_WEBHOOK` | optional CRM forward in `/api/leads` | Optional |
 
@@ -57,7 +66,7 @@ Two surfaces share one Next.js app:
 
 ### Routing map (`src/app/`)
 
-- `/` (`page.tsx`) — chat shell (Sidebar + ChatArea + ToolsPanel). Locks document scroll on mount via the `.chat-locked` class.
+- `/` (`page.tsx`) — mounts `ChatShell` (`src/components/chat/`) wrapped in next-themes `ThemeProvider` + `TenantProvider` (scoped here so marketing stays dark-only). Locks document scroll on mount via the `.chat-locked` class.
 - `(auth)/login`, `(auth)/signup`, `auth/callback` — Supabase email/password auth.
 - `(marketing)/` — `layout.tsx` (public header/footer + Organization/WebSite JSON-LD) wrapping: `about`, `services`, `schemes` (pillar), `calculators`, `faq`, `glossary`, `areas` (index) + `areas/[slug]` (32 SSG council guides).
 - `api/anna/route.ts` — chat proxy to Anthropic (CORS → rate-limit → optional auth → proxy).
@@ -68,10 +77,14 @@ Two surfaces share one Next.js app:
 ### Chat request flow
 
 ```
-Browser → src/lib/anna.ts sendToAnna() → POST /api/anna → Anthropic Messages API
+ChatShell → useSendMessage() → POST /api/anna?stream=1 → Anthropic Messages API (SSE)
+         → src/lib/chat/stream.ts readStream() parses content_block_delta → zustand store
 ```
 
-The browser never calls Anthropic directly; the server route adds the key and caps tokens.
+The browser never calls Anthropic directly; the server route adds the key, caps tokens, and
+streams the Anthropic SSE through verbatim. Conversations live in the zustand store
+(`src/store/useStore.ts`, localStorage-persisted); for signed-in users `useChatHistory` +
+`src/lib/chat/persistence.ts` mirror them to the Supabase `sessions`/`messages` tables.
 
 ### Key files
 
@@ -82,14 +95,25 @@ The browser never calls Anthropic directly; the server route adds the key and ca
 - **`src/lib/supabase/`** — `client.ts` (browser, returns `null` when unconfigured), `server.ts` (RSC/route handler), `admin.ts` (service-role), `auth-timeout.ts` (time-boxed `getUser`).
 - **`src/lib/cors.ts`**, **`src/lib/rate-limit.ts`** — shared CORS headers + Upstash rate limiting for both API routes.
 - **`src/content/`** — typed content data: `areas.ts` (32 councils, enriched), `schemes.ts`, `faq.ts`, `glossary.ts`, `services.ts`, `nav.ts`.
-- **`src/components/calculators/`** — one self-contained client component per calculator. Reused by both `ToolsPanel` (chat) and `MarketingCalculators` (`/calculators` page).
+- **`src/components/chat/`** — the chat UI (`ChatShell`, `ChatArea`, `Sidebar`, `TopNav`, `InputBar`, `Message`, `MessageList`, `EmptyState`, `PromptCard`, `TypingIndicator`, `CalculatorPanel`, `SettingsPanel`, `ThemeToggle`). Self-contained; uses arbitrary-value Tailwind + `--chat-*` tokens.
+- **`src/store/useStore.ts`** — zustand store (conversations, active id, generating flag, calculator/settings UI state) with localStorage persist + `hydrateConversations`/`setRemoteId`.
+- **`src/hooks/useSendMessage.ts`** — send/abort + streaming + Supabase persistence + `firstName` greeting; **`useChatHistory.ts`** — loads signed-in history on mount.
+- **`src/lib/chat/`** — `stream.ts` (SSE parser + `<suggestions>`), `persistence.ts` (Supabase sessions/messages), `calculations.ts`/`lbtt.ts` (chat calculator panel math), `utils.ts` (`cn`, `nanoid`).
+- **`src/context/TenantContext.tsx`** + **`src/lib/tenant-config.ts`** — single-tenant config (Annah) + accent injection; mounted by the chat page only.
+- **`src/components/calculators/`** — full calculator suite; reused by `MarketingCalculators` (`/calculators` page). (Chat uses its own lighter `CalculatorPanel`.)
 - **`src/components/marketing/`** — `MarketingHeader`, `MarketingFooter`, `JsonLd`, `primitives.tsx` (Section/Breadcrumbs/PageHero/CtaBanner/Prose), `MarketingCalculators`, `FaqAccordion`.
-- **`src/context/AuthContext.tsx`** — `AuthProvider` (in the root layout) exposing `{ user, loading, signOut }`; guest-safe.
+- **`src/context/AuthContext.tsx`** — `AuthProvider` (root layout) exposing `{ user, loading, displayName, firstName, signOut }`; guest-safe.
 
 ### Styling / design system
 
-- Dark theme by default: emerald/teal accent on a near-black background. Tokens are HSL CSS
-  variables in `src/app/globals.css`; Tailwind maps them in `tailwind.config.js`. Inter font.
+**Two isolated token systems** in `src/app/globals.css` — keep them separate:
+- **Marketing/shadcn:** HSL vars in `:root` (`--background`, `--accent`, `--border`, …), dark by
+  default, emerald/teal accent. Tailwind maps them in `tailwind.config.js`. Inter font.
+- **Chat:** `--chat-*` vars (GitHub-grays + green) with light values in `:root` and dark under
+  `.dark` (toggled by next-themes). Mapped to Tailwind colors `bg-base`/`bg-surface`/
+  `text-primary`/`border-chat`/`brand`/… (the chat `accent` is `brand` to avoid colliding with
+  shadcn's `accent`). DM Serif Display via `--font-display`. **Never** reuse a `--chat-*` name
+  for shadcn or vice-versa.
 - **Viewport rule:** `globals.css` keeps the document scrollable by default; the chat route opts
   into the full-viewport lock via `.chat-locked` (added in `app/page.tsx`'s effect). Marketing
   pages scroll normally — do not re-add a global `overflow: hidden` on `html`/`body`.
@@ -100,6 +124,7 @@ The browser never calls Anthropic directly; the server route adds the key and ca
 - **Tailwind CSS 3** + **shadcn/ui** (new-york, Radix primitives); `@` alias → `src/`
 - **Supabase** (`@supabase/ssr`) for auth + Postgres (RLS-protected); migrations in `supabase/migrations/`
 - **Framer Motion**, **React Hook Form + Zod**, **pdfjs-dist**, **Recharts**
+- **Chat:** **zustand** (state), **next-themes** (light/dark), **react-markdown** + **remark-gfm**, **react-textarea-autosize**
 - **Upstash Redis** for rate limiting; **Vitest** for unit tests
 
 ## Database
@@ -114,6 +139,12 @@ Tables: `profiles` (free/pro plan), `sessions`, `messages`, `leads` — all RLS-
 Vercel, framework-detected (`vercel.json` is just `{ "framework": "nextjs" }`). Set all
 required env vars in the Vercel dashboard. Security headers + CSP are defined in
 `next.config.ts`.
+
+**Single project/repo:** `dodavahsolutions/annah-app` → Vercel project `annah-app`,
+auto-deploys `main`. Canonical domain **`annahai.co.uk`** (apex serves; `www` and
+`annah-app.vercel.app` 308-redirect to apex). The old standalone `annah-ui` repo is archived
+and its `annah-ui.vercel.app` 308-redirects in. If `NEXT_PUBLIC_SITE_URL` changes, redeploy —
+it's a build-time `NEXT_PUBLIC_*` var baked into the sitemap/canonical output.
 
 ## Conventions
 

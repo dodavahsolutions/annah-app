@@ -4,7 +4,7 @@
 > sprints land. The full plan lives at
 > `~/.claude/plans/sprightly-yawning-sutton.md`.
 >
-> **Last updated:** 2026-05-26
+> **Last updated:** 2026-05-27
 
 ---
 
@@ -14,6 +14,7 @@
 |---|---|---|---|
 | **A** | DB schema codification + Lead capture & referral | 1 & 2 | ✅ **Done — shipped to prod** |
 | **B** | Public content & SEO pages | 2 & 3 | ✅ **Done — built, verified, pushed (`f2a723d`)** |
+| — | New chat UI port + hosting consolidation + custom domain | — | ✅ **Done — live on `annahai.co.uk` (`fedbccc`)** |
 | **C** | Transactional email (Resend) + blog/content | 3 | ⬜ Not started |
 | **D** | Stripe + real freemium + Pro tier + rate alerts | 4 | ⬜ Not started |
 | **E** | Compliance pages, PostHog, FCA review, QA, launch | 5 | ⬜ Not started |
@@ -134,6 +135,37 @@ live project. Migration `supabase/migrations/0003_security_hardening.sql` (idemp
       future work: implement the HaveIBeenPwned Pwned Passwords range API (free/keyless,
       k-anonymity) in the signup path — slot into a sprint.
 - [x] Inspect `rls_auto_enable` — confirmed legitimate event-trigger function; keep + revoke (done in `0003`). *(2026-05-26)*
+
+---
+
+## ✅ New chat UI port + hosting consolidation + custom domain (COMPLETE)
+
+Replaced the chat surface with the redesigned UI (from the now-archived `annah-ui`
+project), unified hosting onto one project/repo, and put a real domain in front.
+
+### Chat UI port (`d44958a`, `7f8e993`)
+- New chat UI under `src/components/chat/` (ChatShell/ChatArea/Sidebar/TopNav/InputBar/
+  Message/EmptyState/CalculatorPanel/SettingsPanel/ThemeToggle/…), zustand store
+  (`src/store/useStore.ts`), `useSendMessage` streaming from `/api/anna?stream=1`,
+  `src/lib/chat/*` (stream parser, persistence, chat calc). Wired to the existing backend.
+- **Design-system isolation:** chat tokens namespaced `--chat-*` + Tailwind `brand`/`bg-base`/
+  `text-primary`/… so they never collide with the shadcn/marketing palette. next-themes +
+  TenantProvider scoped to the chat page; marketing stays dark-only.
+- **Chat history:** signed-in conversations persist to Supabase `sessions`/`messages`
+  (`useChatHistory` + `src/lib/chat/persistence.ts`); guests use the localStorage store.
+- **Removed:** legacy chat surface (Header/ChatArea/Sidebar/ToolsPanel/…) and the old
+  lead-capture UI (`LeadCaptureDialog`, `useLeadTrigger`). `/api/leads` + `scoreLead()` kept.
+
+### Hosting consolidation + custom domain (`fedbccc`)
+- Single source of truth: repo `annah-app` → Vercel project `annah-app`, auto-deploys `main`.
+- Canonical domain **`annahai.co.uk`** (apex serves; `www` + `annah-app.vercel.app` 308→apex).
+  `NEXT_PUBLIC_SITE_URL=https://annahai.co.uk` (sitemap/canonical/OG verified on the domain).
+- Standalone `annah-ui` GitHub repo **archived**; `annah-ui.vercel.app` 308-redirects to apex.
+
+### Deferred / fast-follows
+- **Lead capture:** to be written fresh (backend `/api/leads` + scoring ready to reuse).
+- Chat calculator panel kept as the lighter 3-tool version; full suite stays on `/calculators`.
+- Lighthouse SEO ≥ 95 pass against `annahai.co.uk` still outstanding (from Sprint B).
 
 ---
 
