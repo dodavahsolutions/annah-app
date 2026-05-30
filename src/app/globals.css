@@ -145,6 +145,30 @@ input[type="number"] { font-variant-numeric: tabular-nums; }
 
 .font-display { font-family: var(--font-display), Georgia, serif; }
 
+/* ── Typography: "Trustworthy Editorial" ──────────────────────────────────
+   Two roles, kept strictly separate:
+   • Lora (serif, var(--font-display)) → section headings + AI chat responses.
+   • Inter (sans) → every UI element: nav links, buttons, inputs, placeholders,
+     metadata, tool components.
+   The chat surface opts in via `.chat-root` (set on the ChatShell wrapper) so
+   none of this leaks onto the marketing site. */
+.chat-root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+}
+/* UI elements share Inter 14px / 500 / -0.01em as their baseline. Components
+   may scale the size, but inherit the family + weight + tracking. */
+.chat-root button,
+.chat-root input,
+.chat-root textarea,
+.chat-root select {
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.chat-root input::placeholder,
+.chat-root textarea::placeholder { font-weight: 500; }
+
 .avatar-circle { background: var(--chat-accent-dim); color: var(--chat-accent); }
 .dark .avatar-circle { background: var(--chat-accent); color: #ffffff; }
 
@@ -202,15 +226,47 @@ input[type="number"] { font-variant-numeric: tabular-nums; }
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--chat-accent) 15%, transparent);
 }
 
-/* Markdown prose — token-driven so dark mode works automatically. */
-.chat-prose p { color: var(--chat-text-primary); margin-bottom: 0.75rem; line-height: 1.7; }
+/* AI chat output — Lora serif at 16px / 1.65 for comfortable, low-strain
+   reading. Token-driven so dark mode works automatically. Markdown fragments
+   (bold, lists, blockquotes, headings) keep elegant, even spacing. */
+.chat-prose {
+  font-family: var(--font-display), Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.65;
+  letter-spacing: normal; /* serif reads better without the UI tracking */
+  color: var(--chat-text-primary);
+}
+.chat-prose p { color: var(--chat-text-primary); margin-bottom: 0.85rem; line-height: 1.65; }
 .chat-prose p:last-child { margin-bottom: 0; }
-.chat-prose strong { color: var(--chat-text-primary); font-weight: 500; }
-.chat-prose ul, .chat-prose ol { margin-left: 1rem; margin-bottom: 0.75rem; list-style-position: outside; }
+.chat-prose strong { color: var(--chat-text-primary); font-weight: 600; }
+.chat-prose em { font-style: italic; }
+.chat-prose h1, .chat-prose h2, .chat-prose h3, .chat-prose h4 {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 600;
+  color: var(--chat-text-primary);
+  line-height: 1.3;
+  margin: 1.1rem 0 0.5rem;
+}
+.chat-prose h1 { font-size: 1.45em; }
+.chat-prose h2 { font-size: 1.25em; }
+.chat-prose h3 { font-size: 1.1em; }
+.chat-prose h4 { font-size: 1em; }
+.chat-prose > :first-child { margin-top: 0; }
+.chat-prose ul, .chat-prose ol { margin-left: 1.1rem; margin-bottom: 0.85rem; list-style-position: outside; }
 .chat-prose ul { list-style-type: disc; }
 .chat-prose ol { list-style-type: decimal; }
-.chat-prose li { margin-bottom: 0.25rem; color: var(--chat-text-primary); }
-.chat-prose code { background: var(--chat-bg-elevated); border: 1px solid var(--chat-border); border-radius: 4px; padding: 1px 5px; font-size: 0.875em; color: var(--chat-text-primary); }
-.chat-prose pre { background: var(--chat-bg-elevated); border: 1px solid var(--chat-border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin-bottom: 0.75rem; }
+.chat-prose li { margin-bottom: 0.4rem; line-height: 1.65; color: var(--chat-text-primary); }
+.chat-prose li:last-child { margin-bottom: 0; }
+.chat-prose blockquote {
+  border-left: 3px solid var(--chat-accent);
+  padding-left: 0.9rem;
+  margin: 0.85rem 0;
+  color: var(--chat-text-secondary);
+  font-style: italic;
+}
+/* Code stays monospace + Inter-sized so it never inherits the serif. */
+.chat-prose code { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; background: var(--chat-bg-elevated); border: 1px solid var(--chat-border); border-radius: 4px; padding: 1px 5px; font-size: 0.8125em; color: var(--chat-text-primary); }
+.chat-prose pre { background: var(--chat-bg-elevated); border: 1px solid var(--chat-border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin-bottom: 0.85rem; }
 .chat-prose pre code { background: none; border: none; padding: 0; font-size: 0.8125em; }
 .chat-prose a { color: var(--chat-accent); text-decoration: underline; }

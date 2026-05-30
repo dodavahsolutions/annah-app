@@ -1,25 +1,29 @@
 import type { Metadata } from 'next';
-import { DM_Serif_Display } from 'next/font/google';
+import { Lora } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
 import './globals.css';
 
-// Display font for the chat surface (headings/avatars). Exposed as the
-// --font-display CSS var; only the chat design system references it.
-const dmSerif = DM_Serif_Display({
-  weight: '400',
+// "Trustworthy editorial" serif for the chat surface — section headings and
+// AI chat responses. Exposed as the --font-display CSS var; only the chat
+// design system references it (marketing stays on Inter). Loaded via next/font
+// (the repo convention) rather than an @import so it's self-hosted and
+// preloaded with no extra render-blocking request.
+const lora = Lora({
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
   subsets: ['latin'],
   variable: '--font-display',
   display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'Annah – Scotland Mortgage Advisor',
-  description: 'AI-powered mortgage advisor specialising in Scotland',
+  title: 'Annah – Scotland Mortgage Guidance Tool',
+  description: 'AI-powered mortgage guidance tool specialising in Scotland',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={dmSerif.variable}>
+    <html lang="en" suppressHydrationWarning className={lora.variable}>
       <body className="font-sans antialiased">
         <AuthProvider>{children}</AuthProvider>
       </body>

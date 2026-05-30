@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 export const SITE = {
   name: 'Annah',
   legalName: 'Annah Mortgages',
-  tagline: 'Scotland Mortgage Advisor',
+  tagline: 'Scotland Mortgage Guidance Tool',
   description:
     'Annah is an AI-powered mortgage guide for Scotland — instant calculators for LBTT, affordability and repayments, plus plain-English help with Scottish home-buying schemes.',
   // CORS already relies on NEXT_PUBLIC_SITE_URL; reuse it as the canonical origin.

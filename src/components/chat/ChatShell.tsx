@@ -28,7 +28,7 @@ export function ChatShell() {
   }, [sidebarOpen, setSidebarOpen])
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-bg-base">
+    <div className="chat-root flex h-screen w-screen overflow-hidden bg-bg-base">
       {/* Desktop sidebar */}
       <div className="hidden flex-shrink-0 md:block">
         <Sidebar />

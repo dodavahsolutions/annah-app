@@ -3,6 +3,7 @@
 import { useTenant } from "@/context/TenantContext"
 import { useAuth } from "@/context/AuthContext"
 import { PromptCard } from "./PromptCard"
+import { AnnahStacked } from "./brand/AnnahStacked"
 
 interface EmptyStateProps {
   onSelect: (prompt: string) => void
@@ -34,11 +35,9 @@ export function EmptyState({ onSelect }: EmptyStateProps) {
   return (
     <div className="m-auto flex w-full max-w-[480px] flex-col items-center px-[16px] py-[32px]">
       <div className="mb-[32px] flex flex-col items-center text-center">
-        <div className="avatar-circle font-display grid h-[56px] w-[56px] place-items-center rounded-full text-[26px]">
-          {tenant.avatarInitial}
-        </div>
-        <h1 className="font-display mt-[12px] text-[32px] text-text-primary">
-          {firstName ? `Hi ${firstName}, I'm ${tenant.assistantName}` : tenant.assistantName}
+        <AnnahStacked className="h-[100px] w-auto text-[#3a5a40] dark:text-[#f9f8f5]" />
+        <h1 className="font-display mt-[18px] text-[26px] text-text-primary">
+          {firstName ? `Hi ${firstName}, I'm ${tenant.assistantName}` : `Hi, I'm ${tenant.assistantName}`}
         </h1>
         <p className="mt-[8px] max-w-[380px] text-[15px] leading-relaxed text-text-secondary">
           {tenant.welcomeMessage}

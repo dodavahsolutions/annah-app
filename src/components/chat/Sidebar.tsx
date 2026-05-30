@@ -25,6 +25,7 @@ import { useSendMessage } from "@/hooks/useSendMessage"
 import { groupConversationsByDate, type ConversationGroup } from "@/lib/chat/utils"
 import { cn } from "@/lib/chat/utils"
 import { TOPIC_SECTIONS } from "@/content/topics"
+import { AnnahLockup } from "./brand/AnnahLockup"
 
 const GROUP_ORDER: ConversationGroup[] = ["Today", "Yesterday", "This week", "Older"]
 
@@ -149,6 +150,12 @@ export function Sidebar() {
 
   return (
     <div className="flex h-full w-[240px] flex-col border-r border-border-chat bg-bg-surface">
+      {/* Brand lockup — house mark + "ANNAH AI" serif wordmark. Inherits its
+          colour from the theme: brand green in light mode, cream in dark. */}
+      <div className="flex flex-shrink-0 items-center border-b border-border-subtle px-[16px] py-[14px]">
+        <AnnahLockup className="h-[26px] w-auto text-[#3a5a40] dark:text-[#f9f8f5]" />
+      </div>
+
       {/* New chat */}
       <div className="flex-shrink-0 p-[12px]">
         <button

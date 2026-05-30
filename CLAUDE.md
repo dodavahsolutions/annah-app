@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-**Anna** (project codename "ANNAH") is a Scotland-focused mortgage advisor web app. It
+**Anna** (project codename "ANNAH") is a Scotland-focused mortgage guidance tool web app. It
 combines a Claude-powered streaming chat assistant with Scotland-aware mortgage
 calculators, Supabase auth + chat-history persistence, and a public SEO/marketing site.
 
@@ -61,7 +61,7 @@ Production sets the vars in Vercel.
 
 Two surfaces share one Next.js app:
 
-1. **Chat app** at `/` — the full-viewport advisor UI (client-heavy).
+1. **Chat app** at `/` — the full-viewport guidance UI (client-heavy).
 2. **Marketing site** under the `(marketing)` route group — public, statically generated, SEO-optimised.
 
 ### Routing map (`src/app/`)

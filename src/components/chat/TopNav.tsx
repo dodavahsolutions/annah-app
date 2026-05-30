@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { Check, ChevronDown, Menu } from "lucide-react"
 import { useStore } from "@/store/useStore"
 import { useTenant } from "@/context/TenantContext"
+import { AnnahMark } from "./brand/AnnahMark"
 
 export function TopNav() {
   const tenant = useTenant()
@@ -34,6 +35,10 @@ export function TopNav() {
         >
           <Menu size={20} />
         </button>
+
+        {/* Compact house mark — only on mobile, where the sidebar (and its full
+            lockup) is collapsed into the drawer. */}
+        <AnnahMark className="h-[26px] w-auto text-[#3a5a40] dark:text-[#f9f8f5] md:hidden" />
 
         <div ref={pillRef} className="relative">
           <button

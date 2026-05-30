@@ -72,7 +72,7 @@ export default function SignupPage() {
         </div>
         <div>
           <span className="text-xl font-bold text-foreground">Annah</span>
-          <p className="text-xs text-muted-foreground">Scotland Mortgage Advisor</p>
+          <p className="text-xs text-muted-foreground">Scotland Mortgage Guidance Tool</p>
         </div>
       </div>
 

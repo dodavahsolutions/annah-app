@@ -86,7 +86,7 @@ export function Message({ message, index, onSend, previousUserContent }: Message
           </div>
         )}
 
-        <div className="chat-prose text-[14px]">
+        <div className="chat-prose">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{

@@ -1,6 +1,6 @@
-# Anna — Scotland Mortgage Advisor
+# Anna — Scotland Mortgage Guidance Tool
 
-Anna is a Scotland-focused mortgage advisor web app: a Claude-powered **streaming chat
+Anna is a Scotland-focused mortgage guidance tool web app: a Claude-powered **streaming chat
 assistant** (redesigned UI under `src/components/chat/`, zustand state, light/dark),
 Scotland-aware mortgage calculators (repayment, affordability, LBTT incl. ADS, LTV,
 overpayment, remortgage, buy-to-let), Supabase auth + chat-history persistence, and a

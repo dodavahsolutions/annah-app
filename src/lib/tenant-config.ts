@@ -25,10 +25,10 @@ export const DEFAULT_TENANT: TenantConfig = {
   accentDimDark: "#0D3D2E",
   welcomeMessage:
     process.env.NEXT_PUBLIC_TENANT_WELCOME ??
-    "Hi, I'm Annah — your Scotland-wide mortgage advisor for first-time buyers.",
+    "Your Scotland-wide mortgage guidance tool.",
   footerDisclaimer:
     process.env.NEXT_PUBLIC_TENANT_DISCLAIMER ??
-    "Annah provides guidance only · Not regulated financial advice · Always consult a qualified mortgage advisor",
+    "Annah provides general guidance only · Not regulated financial advice · For advice, speak to a qualified, regulated professional",
   fcaNumber: process.env.NEXT_PUBLIC_TENANT_FCA || undefined,
   avatarInitial: (process.env.NEXT_PUBLIC_TENANT_NAME ?? "Annah").charAt(0).toUpperCase() || "A",
   defaultTheme: "system",
