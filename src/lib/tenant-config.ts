@@ -25,7 +25,7 @@ export const DEFAULT_TENANT: TenantConfig = {
   accentDimDark: "#0D3D2E",
   welcomeMessage:
     process.env.NEXT_PUBLIC_TENANT_WELCOME ??
-    "Your Scotland-wide mortgage guidance tool.",
+    "I'm your Scotland-wide mortgage guidance tool.",
   footerDisclaimer:
     process.env.NEXT_PUBLIC_TENANT_DISCLAIMER ??
     "Annah provides general guidance only · Not regulated financial advice · For advice, speak to a qualified, regulated professional",

@@ -1,7 +1,6 @@
 "use client"
 
 import { useTenant } from "@/context/TenantContext"
-import { useAuth } from "@/context/AuthContext"
 import { PromptCard } from "./PromptCard"
 import { AnnahStacked } from "./brand/AnnahStacked"
 
@@ -30,16 +29,12 @@ const PROMPTS: { title: string; subtitle: string }[] = [
 
 export function EmptyState({ onSelect }: EmptyStateProps) {
   const tenant = useTenant()
-  const { firstName } = useAuth()
 
   return (
     <div className="m-auto flex w-full max-w-[480px] flex-col items-center px-[16px] py-[32px]">
       <div className="mb-[32px] flex flex-col items-center text-center">
         <AnnahStacked className="h-[100px] w-auto text-[#3a5a40] dark:text-[#f9f8f5]" />
-        <h1 className="font-display mt-[18px] text-[26px] text-text-primary">
-          {firstName ? `Hi ${firstName}, I'm ${tenant.assistantName}` : `Hi, I'm ${tenant.assistantName}`}
-        </h1>
-        <p className="mt-[8px] max-w-[380px] text-[15px] leading-relaxed text-text-secondary">
+        <p className="mt-[18px] max-w-[380px] text-[15px] leading-relaxed text-text-secondary">
           {tenant.welcomeMessage}
         </p>
       </div>
