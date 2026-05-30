@@ -13,10 +13,12 @@ import {
   LogIn,
   LogOut,
   MoreHorizontal,
+  Palette,
   PlusSquare,
   Settings,
   Share2,
   Wallet,
+  X,
 } from "lucide-react"
 import { useStore } from "@/store/useStore"
 import { useTenant } from "@/context/TenantContext"
@@ -26,6 +28,7 @@ import { groupConversationsByDate, type ConversationGroup } from "@/lib/chat/uti
 import { cn } from "@/lib/chat/utils"
 import { TOPIC_SECTIONS } from "@/content/topics"
 import { AnnahMark } from "./brand/AnnahMark"
+import { ThemeToggle } from "./ThemeToggle"
 
 const GROUP_ORDER: ConversationGroup[] = ["Today", "Yesterday", "This week", "Older"]
 
@@ -151,9 +154,18 @@ export function Sidebar() {
   return (
     <div className="flex h-full w-[240px] flex-col border-r border-border-chat bg-bg-surface">
       {/* Brand mark — icon only (house + chat bubbles). Inherits its colour
-          from the theme: brand green in light mode, cream in dark. */}
-      <div className="flex flex-shrink-0 items-center border-b border-border-subtle px-[16px] py-[14px]">
+          from the theme: brand green in light mode, cream in dark. The close
+          button only appears on mobile, where the sidebar is a drawer. */}
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-border-subtle px-[16px] py-[14px]">
         <AnnahMark className="h-[30px] w-auto text-[#3a5a40] dark:text-[#f9f8f5]" />
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close menu"
+          className="grid h-[32px] w-[32px] place-items-center rounded-[8px] text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary md:hidden"
+        >
+          <X size={20} />
+        </button>
       </div>
 
       {/* New chat */}
@@ -406,6 +418,14 @@ export function Sidebar() {
                 {copied ? <Check size={15} className="text-brand" /> : <Share2 size={15} />}
                 {copied ? "Copied link" : "Share"}
               </button>
+
+              {/* Theme switch lives directly in the menu (not buried in Settings). */}
+              <div className="flex items-center justify-between px-[14px] py-[8px] text-[13px] text-text-primary">
+                <span className="flex items-center gap-[10px]">
+                  <Palette size={15} /> Theme
+                </span>
+                <ThemeToggle />
+              </div>
 
               <div className="my-[4px] border-t border-border-subtle" />
 

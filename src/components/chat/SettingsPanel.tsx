@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from "framer-motion"
 import { Download, Trash2, X } from "lucide-react"
 import { useStore } from "@/store/useStore"
 import { useTenant } from "@/context/TenantContext"
-import { ThemeToggle } from "./ThemeToggle"
 
 export function SettingsPanel() {
   const tenant = useTenant()
@@ -83,12 +82,6 @@ export function SettingsPanel() {
             </div>
 
             <div className="flex-1 overflow-y-auto px-[16px] pb-[24px]">
-              <div className={sectionLabel}>Appearance</div>
-              <div className={row}>
-                <span>Theme</span>
-                <ThemeToggle />
-              </div>
-
               <div className={sectionLabel}>Conversations</div>
               <button
                 type="button"

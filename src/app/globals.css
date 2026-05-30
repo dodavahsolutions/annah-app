@@ -169,16 +169,23 @@ input[type="number"] { font-variant-numeric: tabular-nums; }
 .chat-root input::placeholder,
 .chat-root textarea::placeholder { font-weight: 500; }
 
-.avatar-circle { background: var(--chat-accent-dim); color: var(--chat-accent); }
-.dark .avatar-circle { background: var(--chat-accent); color: #ffffff; }
+/* Identity indicators — Annah "A" / Guest "G" avatars and any other element
+   using .avatar-circle — use the brand green (#3A5A40), independent of the
+   functional accent colour used elsewhere in the UI. */
+.avatar-circle { background: #e8efe9; color: #3a5a40; }
+.dark .avatar-circle { background: #3a5a40; color: #ffffff; }
 
+/* User bubble matches the AI response: Lora serif at the same 16px / 1.65 so
+   the reading font and size stay consistent across message types. */
 .user-bubble {
   background: var(--chat-user-bubble-bg);
   border: 1px solid var(--chat-user-bubble-border);
   border-radius: 18px 18px 4px 18px;
   padding: 10px 16px;
-  font-size: 14px;
-  line-height: 1.6;
+  font-family: var(--font-display), Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  line-height: 1.65;
+  letter-spacing: normal;
   color: var(--chat-user-bubble-text);
   word-break: break-word;
   white-space: pre-wrap;
